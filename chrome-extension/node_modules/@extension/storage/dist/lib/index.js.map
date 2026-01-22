@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../lib/index.ts"],
+  "sourcesContent": ["export type { BaseStorage } from './base/types';\nexport * from './settings';\nexport * from './chat';\nexport * from './profile';\nexport * from './prompt/favorites';\n\n// Re-export the favorites instance for direct use\nexport { default as favoritesStorage } from './prompt/favorites';\n"],
+  "mappings": ";AACA,cAAc;AACd,cAAc;AACd,cAAc;AACd,cAAc;AAGd,SAAS,WAAW,wBAAwB;",
+  "names": []
+}

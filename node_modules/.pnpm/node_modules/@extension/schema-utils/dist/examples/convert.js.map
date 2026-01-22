@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../examples/convert.ts"],
+  "sourcesContent": ["import { convertOpenAISchemaToGemini, stringifyCustom } from '../lib/helper.js';\nimport { jsonNavigatorOutputSchema } from '../lib/json_schema.js';\n\n// Convert the schema\nconsole.log('Converting jsonNavigatorOutputSchema to Gemini format...');\nconst geminiSchema = convertOpenAISchemaToGemini(jsonNavigatorOutputSchema);\n\n// pretty print the schema\nconsole.log(stringifyCustom(geminiSchema));\n"],
+  "mappings": ";AAAA,SAAS,6BAA6B,uBAAuB;AAC7D,SAAS,iCAAiC;AAG1C,QAAQ,IAAI,0DAA0D;AACtE,MAAM,eAAe,4BAA4B,yBAAyB;AAG1E,QAAQ,IAAI,gBAAgB,YAAY,CAAC;",
+  "names": []
+}

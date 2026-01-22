@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../lib/chat/index.ts"],
+  "sourcesContent": ["export * from './types';\nexport * from './history';\n"],
+  "mappings": ";AAAA,cAAc;AACd,cAAc;",
+  "names": []
+}

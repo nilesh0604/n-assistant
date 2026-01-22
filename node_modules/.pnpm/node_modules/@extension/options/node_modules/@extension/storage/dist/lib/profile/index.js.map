@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../lib/profile/index.ts"],
+  "sourcesContent": ["export * from './user';\n"],
+  "mappings": ";AAAA,cAAc;",
+  "names": []
+}

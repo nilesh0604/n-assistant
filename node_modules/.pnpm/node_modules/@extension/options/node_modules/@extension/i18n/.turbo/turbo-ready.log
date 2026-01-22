@@ -1,0 +1,10 @@
+
+
+> @extension/i18n@0.1.13 ready /Users/Nilesh_Shinde/iSpace/local-ai-assistant/extensions/nanobrowser/packages/i18n
+> pnpm genenrate-i8n && node build.dev.mjs
+
+
+> @extension/i18n@0.1.13 genenrate-i8n /Users/Nilesh_Shinde/iSpace/local-ai-assistant/extensions/nanobrowser/packages/i18n
+> node genenrate-i18n.mjs
+
+I18n build complete

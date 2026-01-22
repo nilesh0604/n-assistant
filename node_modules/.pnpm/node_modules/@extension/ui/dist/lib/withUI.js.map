@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../lib/withUI.ts"],
+  "sourcesContent": ["import deepmerge from 'deepmerge';\nimport type { Config } from 'tailwindcss/types/config';\n\nexport function withUI(tailwindConfig: Config): Config {\n  return deepmerge(tailwindConfig, {\n    content: ['./node_modules/@extension/ui/lib/**/*.{tsx,ts,js,jsx}'],\n  });\n}\n"],
+  "mappings": ";AAAA,OAAO,eAAe;AAGf,gBAAS,OAAO,gBAAgC;AACrD,SAAO,UAAU,gBAAgB;AAAA,IAC/B,SAAS,CAAC,uDAAuD;AAAA,EACnE,CAAC;AACH;",
+  "names": []
+}
