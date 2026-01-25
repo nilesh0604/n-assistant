@@ -28,8 +28,20 @@ We deeply appreciate your interest in contributing to NanoBrowser! Every contrib
 2. Write clear commit messages in present tense ("Add feature" not "Added feature")
 3. Test your changes thoroughly
 4. Update documentation if needed
-5. Create a Pull Request with a clear description
-6. Be responsive to feedback and address review comments promptly
+5. **Update CHANGELOG.md** with your changes following the format:
+   - Add new entry under `[Unreleased]` section
+   - Use `### Added`, `### Changed`, `### Fixed`, `### Removed` categories
+   - Briefly describe the change and its impact
+6. Create a Pull Request with a clear description
+7. Be responsive to feedback and address review comments promptly
+
+### Changelog Guidelines
+- **Format**: Follow Keep a Changelog format (https://keepachangelog.com/en/1.0.0/)
+- **Categories**: Use `Added`, `Changed`, `Fixed`, `Removed`, `Security`, `Deprecated`
+- **Version Numbers**: Update version number in `package.json` when releasing
+- **Dates**: Use release date in format `YYYY-MM-DD`
+- **Descriptions**: Be concise but informative about user-facing changes
+- **Internal Changes**: Don't document minor refactors or test updates in changelog
 
 ## License
 
