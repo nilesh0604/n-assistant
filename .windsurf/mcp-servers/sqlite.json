@@ -1,0 +1,18 @@
+{
+  "name": "sqlite",
+  "description": "SQLite database access for local storage and testing",
+  "databasePath": "./data/nanobrowser.db",
+  "permissions": ["read", "write"],
+  "autoMigrate": true,
+  "tables": {
+    "agent_sessions": {
+      "columns": ["id", "agent_type", "task", "status", "created_at", "updated_at"]
+    },
+    "user_settings": {
+      "columns": ["key", "value", "created_at"]
+    },
+    "execution_logs": {
+      "columns": ["id", "session_id", "action", "result", "timestamp"]
+    }
+  }
+}

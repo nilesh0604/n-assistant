@@ -1,6 +1,20 @@
 # CLAUDE.md
 
-This file provides guidance to AI coding assistants (e.g., Claude Code, GitHub Copilot, Cursor) when working with this repository.
+This file provides guidance to AI coding assistants (e.g., Claude Code, GitHub Copilot, Cursor, Windsurf Cascade) when working with this repository.
+
+## Windsurf Cascade Integration
+
+This project is optimized for Windsurf Cascade with the following configurations:
+- `.codeiumignore` - Excludes large directories from indexing
+- `.windsurfrules` - Project-specific guidelines for Cascade
+- `.windsurf/rules/` - Glob-based rules for specific file types
+
+### Cascade Best Practices
+- Use `@` mentions to focus on specific files/folders
+- Keep conversations focused on single tasks
+- Use `megaplan` for complex architectural changes
+- Leverage Arena Mode for model comparison
+- Set reasoning effort to Medium for most tasks
 
 ## Project Overview
 

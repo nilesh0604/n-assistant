@@ -1,0 +1,23 @@
+{
+  "name": "web-search",
+  "description": "Web search for latest API documentation and resources",
+  "searchEngine": "google",
+  "maxResults": 10,
+  "safeSearch": "moderate",
+  "language": "en",
+  "region": "us",
+  "filters": {
+    "excludeSites": ["stackoverflow.com", "reddit.com"],
+    "includeSites": [
+      "developer.chrome.com",
+      "react.dev",
+      "typescriptlang.org",
+      "tailwindcss.com",
+      "vitest.dev"
+    ]
+  },
+  "cache": {
+    "enabled": true,
+    "ttl": 3600
+  }
+}

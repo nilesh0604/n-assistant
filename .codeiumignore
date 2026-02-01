@@ -1,0 +1,43 @@
+# Directories to exclude from Windsurf indexing
+node_modules/
+dist/
+dist-zip/
+build/
+.git/
+.vscode/
+.idea/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
+
+# Large dependency directories
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Generated files
+*.tsbuildinfo
+*.map
+
+# Temporary files
+.tmp/
+temp/
+tmp/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.turbo/
+
+# Environment files
+.env.local
+.env.*.local
+
+# Documentation build outputs
+docs/build/
+docs/_build/
+
+# Test coverage reports
+coverage/
+.nyc_output/

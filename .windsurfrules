@@ -1,0 +1,100 @@
+# Nanobrowser Project - Windsurf Guidelines
+
+## Package Manager & Commands
+- Always use `pnpm` for package management (required)
+- Use workspace-scoped commands: `pnpm -F <workspace> <command>`
+- Prefer targeted builds: `pnpm -F chrome-extension build` over root builds
+
+## Development Workflow
+- Run `pnpm type-check` before committing
+- Use `pnpm lint` for code quality checks
+- Test with `pnpm -F chrome-extension test` for unit tests
+- Build extension with `pnpm build` before testing
+
+## Code Style Requirements
+- Use 2 spaces for indentation (Prettier config)
+- Follow ESLint rules (React, TypeScript, Import, A11y)
+- Components: PascalCase, variables/functions: camelCase
+- Use `import type` for type-only imports
+
+## Architecture Constraints
+- Monorepo with Turbo - respect workspace boundaries
+- Chrome Extension Manifest V3 - no Manifest V2 code
+- Background scripts run as service workers
+- Use Chrome APIs for browser automation
+
+## Multi-Agent System
+- Three agents: Navigator, Planner, Validator
+- Agent logic in `chrome-extension/src/background/agent/`
+- Use Chrome messaging APIs for coordination
+
+## Security Requirements
+- Never hardcode API keys or credentials
+- Use VITE_ prefixed environment variables
+- Validate all user inputs
+- Follow Content Security Policy
+
+## Testing Guidelines
+- Write unit tests for business logic
+- Use Vitest framework
+- Tests in `__tests__` directories with `*.test.ts`
+- Mock network/browser APIs
+
+## Internationalization
+- Use structured naming: `component_category_specificAction_state`
+- Prefixes: `bg_` (background), `exec_` (executor), `act_` (actions)
+- Placeholders with Chrome i18n format
+- Edit source JSON in `packages/i18n/locales/`
+
+## Build & Distribution
+- Extension builds to `dist/` directory
+- Distribution zips in `dist-zip/`
+- Do not edit generated files
+- Use `__DEV__` flag for development builds
+
+## Performance Guidelines
+- Use array methods (map, filter, reduce)
+- Implement memoization for expensive calls
+- Minimize DOM manipulations
+- Use React optimization (useMemo, useCallback)
+
+## File Organization
+- Extract reusable logic into utilities
+- Keep functions small and focused
+- Prefer composition over inheritance
+- Use dependency injection for testability
+
+## Windsurf-Specific Best Practices
+
+### Context Management
+- Use `@filename` or `@symbol` to pin specific files instead of scanning entire project
+- Start fresh sessions for new tasks to maintain context accuracy
+- Clear chat history when switching contexts (e.g., React to Node.js)
+
+### Planning & Execution
+- Use `/plan` command for architectural decisions and complex tasks
+- Follow plan-review-execute loop to save tokens
+- Break down large tasks: "Build dashboard" → "/plan Create dashboard layout"
+- Use `/execute` for implementation phases
+
+### MCP Server Integration
+- Available servers: `@sqlite`, `@github`, `@playwright`, `@web`
+- Use `@web Search` for latest API documentation
+- Use `@github Create PR` for repository management
+- Use `@sqlite Query` for local data operations
+
+### Terminal Execution
+- Use Cascade Dedicated Terminal for reliable command execution
+- Commands can handle interactive prompts
+- Prefer workspace-scoped commands with `pnpm -F <workspace>`
+
+### Memory Management
+- Review and delete outdated AI memories regularly
+- Archive completed project plans separately
+- Keep active memories limited to current sprint
+
+### Team Collaboration
+- Windsurf handles architect role (planning, structure)
+- VS Code/Copilot handles developer role (implementation)
+- Shared context files: `CLAUDE.md`, `.windsurfrules`, `TODO.md`
+- Use structured PR comments with @mentions for specific files

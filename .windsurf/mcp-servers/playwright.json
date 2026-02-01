@@ -1,0 +1,23 @@
+{
+  "name": "playwright",
+  "description": "End-to-end testing automation for Nanobrowser",
+  "testDirectory": "./tests/e2e",
+  "browsers": ["chromium", "firefox", "webkit"],
+  "viewport": { "width": 1280, "height": 720 },
+  "timeout": 30000,
+  "retries": 2,
+  "testMatch": [
+    "**/*.e2e.test.ts",
+    "**/*.spec.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**"
+  ],
+  "reporter": ["html", "json"],
+  "use": {
+    "trace": "on-first-retry",
+    "screenshot": "only-on-failure",
+    "video": "retain-on-failure"
+  }
+}

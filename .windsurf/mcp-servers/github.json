@@ -1,0 +1,22 @@
+{
+  "name": "github",
+  "description": "GitHub repository management for Nanobrowser project",
+  "repository": "nilesh0604/nanobrowser",
+  "defaultBranch": "main",
+  "permissions": ["read", "write:issues", "write:pull_request"],
+  "endpoints": {
+    "createPR": true,
+    "listIssues": true,
+    "getFileContents": true,
+    "createBranch": true,
+    "addComment": true
+  },
+  "autoAssign": ["nilesh0604"],
+  "labels": {
+    "bug": "bug",
+    "feature": "enhancement",
+    "documentation": "documentation",
+    "chrome-extension": "chrome-extension",
+    "agents": "agents"
+  }
+}
