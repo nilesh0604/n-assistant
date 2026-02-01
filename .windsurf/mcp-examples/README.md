@@ -1,4 +1,7 @@
-# MCP Server Configuration for Nanobrowser
+# MCP Server Examples for Nanobrowser
+
+> **Note**: These are example configurations for documentation purposes only.  
+> Windsurf MCP servers are configured globally in Windsurf settings, not via project JSON files.
 
 ## Available MCP Servers
 
