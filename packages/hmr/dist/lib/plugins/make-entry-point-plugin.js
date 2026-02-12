@@ -20,27 +20,28 @@ function makeEntryPointPlugin() {
                 throw new Error('Output directory not found');
             }
             for (const module of Object.values(bundle)) {
-                const fileName = node_path_1.default.basename(module.fileName);
+                const moduleInfo = module;
+                const fileName = node_path_1.default.basename(moduleInfo.fileName);
                 const newFileName = fileName.replace('.js', '_dev.js');
-                switch (module.type) {
+                switch (moduleInfo.type) {
                     case 'asset':
                         if (fileName.endsWith('.map')) {
                             cleanupTargets.add(node_path_1.default.resolve(outputDir, fileName));
                             const originalFileName = fileName.replace('.map', '');
-                            const replacedSource = String(module.source).replaceAll(originalFileName, newFileName);
-                            module.source = '';
+                            const replacedSource = String(moduleInfo.source).replaceAll(originalFileName, newFileName);
+                            moduleInfo.source = '';
                             node_fs_1.default.writeFileSync(node_path_1.default.resolve(outputDir, newFileName), replacedSource);
                             break;
                         }
                         break;
                     case 'chunk': {
-                        node_fs_1.default.writeFileSync(node_path_1.default.resolve(outputDir, newFileName), module.code);
+                        node_fs_1.default.writeFileSync(node_path_1.default.resolve(outputDir, newFileName), moduleInfo.code);
                         if (isFirefox) {
                             const contentDirectory = extractContentDir(outputDir);
-                            module.code = `import(browser.runtime.getURL("${contentDirectory}/${newFileName}"));`;
+                            moduleInfo.code = `import(browser.runtime.getURL("${contentDirectory}/${newFileName}"));`;
                         }
                         else {
-                            module.code = `import('./${newFileName}');`;
+                            moduleInfo.code = `import('./${newFileName}');`;
                         }
                         break;
                     }

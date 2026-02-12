@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { PluginOption } from 'vite';
+import type { OutputOptions, OutputBundle } from 'rollup';
 
 /**
  * make entry point file for content script cache busting
@@ -11,7 +12,7 @@ export function makeEntryPointPlugin(): PluginOption {
 
   return {
     name: 'make-entry-point-plugin',
-    generateBundle(options, bundle) {
+    generateBundle(options: OutputOptions, bundle: OutputBundle) {
       const outputDir = options.dir;
 
       if (!outputDir) {
@@ -19,31 +20,31 @@ export function makeEntryPointPlugin(): PluginOption {
       }
 
       for (const module of Object.values(bundle)) {
-        const fileName = path.basename(module.fileName);
+        const moduleInfo = module as any;
+        const fileName = path.basename(moduleInfo.fileName);
         const newFileName = fileName.replace('.js', '_dev.js');
 
-        switch (module.type) {
+        switch (moduleInfo.type) {
           case 'asset':
             if (fileName.endsWith('.map')) {
               cleanupTargets.add(path.resolve(outputDir, fileName));
 
               const originalFileName = fileName.replace('.map', '');
-              const replacedSource = String(module.source).replaceAll(originalFileName, newFileName);
-
-              module.source = '';
+              const replacedSource = String((moduleInfo as { source: string }).source).replaceAll(originalFileName, newFileName);
+              (moduleInfo as { source: string }).source = '';
               fs.writeFileSync(path.resolve(outputDir, newFileName), replacedSource);
               break;
             }
             break;
 
           case 'chunk': {
-            fs.writeFileSync(path.resolve(outputDir, newFileName), module.code);
+            fs.writeFileSync(path.resolve(outputDir, newFileName), (moduleInfo as { code: string }).code);
 
             if (isFirefox) {
               const contentDirectory = extractContentDir(outputDir);
-              module.code = `import(browser.runtime.getURL("${contentDirectory}/${newFileName}"));`;
+              (moduleInfo as { code: string }).code = `import(browser.runtime.getURL("${contentDirectory}/${newFileName}"));`;
             } else {
-              module.code = `import('./${newFileName}');`;
+              (moduleInfo as { code: string }).code = `import('./${newFileName}');`;
             }
             break;
           }
@@ -55,7 +56,7 @@ export function makeEntryPointPlugin(): PluginOption {
         fs.unlinkSync(target);
       });
     },
-  };
+  } as PluginOption;
 }
 
 /**

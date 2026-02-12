@@ -21,6 +21,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*.log
+logs/
 
 # Runtime data
 pids
@@ -35,26 +37,29 @@ coverage/
 # nyc test coverage
 .nyc_output
 
+# Test artifacts
+test-results/
+playwright-report/
+test-results.xml
+
 # Dependency directories
 jspm_packages/
 
 # TypeScript cache
 *.tsbuildinfo
 
-# Optional npm cache directory
+# Cache directories
 .npm
-
-# Optional eslint cache
 .eslintcache
-
-# Optional stylelint cache
 .stylelintcache
-
-# Microbundle cache
 .rpt2_cache/
 .rts2_cache_cjs/
 .rts2_cache_es/
 .rts2_cache_umd/
+.cache/
+.parcel-cache/
+.rollup.cache
+.turbo
 
 # Optional REPL history
 .node_repl_history
@@ -65,25 +70,52 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
+# Build tools
 .next
-
-# Nuxt.js build / generate output
 .nuxt
-
-# Storybook build outputs
 .out
 .storybook-out
 
 # Temporary folders
 tmp/
 temp/
+.local
 
-# Editor directories and files
+# OS generated files
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Icon?
+.DocumentRevisions-V100
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.com.apple.timemachine.supported
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+.apdisk
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# IDE and editor files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -93,14 +125,23 @@ temp/
 *.sln
 *.sw?
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Vim
+*.swp
+*.swo
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
 
 # Generated files
 packages/i18n/lib/**

@@ -32,10 +32,10 @@ describe('NavigatorPrompt Helper Methods', () => {
 
   beforeEach(() => {
     navigatorPrompt = new NavigatorPrompt();
-    
+
     mockContext = {
       messageManager: {
-        getMessages: vi.fn(),
+        getMessages: vi.fn() as any,
       },
       actionResults: [],
       stepInfo: { stepNumber: 1 },
@@ -111,7 +111,7 @@ describe('NavigatorPrompt Helper Methods', () => {
         { content: 'First message', getType: () => 'ai' },
         { content: 'Fill the contact form with input fields', getType: () => 'human' },
       ];
-      mockContext.messageManager.getMessages.mockReturnValue(mockMessages);
+      (mockContext.messageManager.getMessages as any).mockReturnValue(mockMessages);
 
       const taskContext = (navigatorPrompt as any).createTaskContext(mockContext, mockBrowserState);
 
@@ -124,7 +124,7 @@ describe('NavigatorPrompt Helper Methods', () => {
     });
 
     it('should use default task when no messages available', () => {
-      mockContext.messageManager.getMessages.mockReturnValue([]);
+      (mockContext.messageManager.getMessages as any).mockReturnValue([]);
 
       const taskContext = (navigatorPrompt as any).createTaskContext(mockContext, mockBrowserState);
 
@@ -134,7 +134,7 @@ describe('NavigatorPrompt Helper Methods', () => {
 
     it('should handle null stepInfo gracefully', () => {
       mockContext.stepInfo = null;
-      mockContext.messageManager.getMessages.mockReturnValue([{ content: 'Click button', getType: () => 'human' }]);
+      (mockContext.messageManager.getMessages as any).mockReturnValue([{ content: 'Click button', getType: () => 'human' }]);
 
       const taskContext = (navigatorPrompt as any).createTaskContext(mockContext, mockBrowserState);
 

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { PluginOption } from 'vite';
+import type { OutputOptions } from 'rollup';
 import { WebSocket } from 'ws';
 import MessageInterpreter from '../interpreter';
 import { BUILD_COMPLETE, LOCAL_RELOAD_SOCKET_URL } from '../constant';
@@ -55,14 +56,15 @@ export function watchRebuildPlugin(config: PluginConfig): PluginOption {
      * Previously, code was injected in generateBundle() after sourcemap creation,
      * causing line number mismatches in dev tools.
      */
-    outputOptions(outputOptions) {
+    outputOptions(outputOptions: OutputOptions) {
       const existingBanner = outputOptions.banner;
 
       if (typeof existingBanner === 'string') {
         outputOptions.banner = existingBanner + '\n' + banner;
       } else if (typeof existingBanner === 'function') {
-        outputOptions.banner = (...args) => {
-          const result = existingBanner(...args);
+        const originalFn = existingBanner as (...args: any[]) => string;
+        outputOptions.banner = (...args: any[]) => {
+          const result = originalFn(...args);
           return (result || '') + '\n' + banner;
         };
       } else {
@@ -76,13 +78,7 @@ export function watchRebuildPlugin(config: PluginConfig): PluginOption {
       onStart?.();
       if (!ws) {
         initializeWebSocket();
-        return;
       }
-      /**
-       * When the build is complete, send a message to the reload server.
-       * The reload server will send a message to the client to reload or refresh the extension.
-       */
-      ws.send(MessageInterpreter.send({ type: BUILD_COMPLETE, id }));
     },
-  };
+  } as PluginOption;
 }

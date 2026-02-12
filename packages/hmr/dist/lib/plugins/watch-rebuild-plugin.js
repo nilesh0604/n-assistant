@@ -7,7 +7,6 @@ exports.watchRebuildPlugin = watchRebuildPlugin;
 const node_fs_1 = __importDefault(require("node:fs"));
 const node_path_1 = __importDefault(require("node:path"));
 const ws_1 = require("ws");
-const interpreter_1 = __importDefault(require("../interpreter"));
 const constant_1 = require("../constant");
 const injectionsPath = node_path_1.default.resolve(__dirname, '..', '..', '..', 'build', 'injections');
 const refreshCode = node_fs_1.default.readFileSync(node_path_1.default.resolve(injectionsPath, 'refresh.js'), 'utf-8');
@@ -54,8 +53,9 @@ function watchRebuildPlugin(config) {
                 outputOptions.banner = existingBanner + '\n' + banner;
             }
             else if (typeof existingBanner === 'function') {
+                const originalFn = existingBanner;
                 outputOptions.banner = (...args) => {
-                    const result = existingBanner(...args);
+                    const result = originalFn(...args);
                     return (result || '') + '\n' + banner;
                 };
             }
@@ -68,13 +68,7 @@ function watchRebuildPlugin(config) {
             onStart === null || onStart === void 0 ? void 0 : onStart();
             if (!ws) {
                 initializeWebSocket();
-                return;
             }
-            /**
-             * When the build is complete, send a message to the reload server.
-             * The reload server will send a message to the client to reload or refresh the extension.
-             */
-            ws.send(interpreter_1.default.send({ type: constant_1.BUILD_COMPLETE, id }));
         },
     };
 }
