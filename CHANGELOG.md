@@ -4,6 +4,24 @@ All notable changes to the n-assistant (Nanobrowser) Chrome extension project wi
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased] - 2025-02-12
+
+### Windsurf Best Practices Implementation
+- **Documentation Updates** - Added comprehensive Windsurf Cascade best practices
+- **Project Management** - Created TODO.md for task tracking and sprint management
+- **Reference Materials** - Added implementation patterns in `examples/reference_strategy.py`
+- **PR Templates** - Created structured pull request template in `.github/PR_TEMPLATE.md`
+- **Memory Management** - Added memory management schedule in `scripts/memory-management.md`
+- **Command Reference** - Created comprehensive command reference guide
+- **Windsurf Rules** - Enhanced `.windsurfrules` with token optimization strategies
+- **MCP Configurations** - Verified and documented MCP server examples
+
+### Developer Experience Improvements
+- **Context Management** - Guidelines for efficient context window usage
+- **Team Collaboration** - Clear role distribution between Windsurf and VS Code/Copilot
+- **Token Optimization** - Strategies for 50-70% token usage reduction
+- **Arena Mode Support** - Configuration for model comparison workflows
+
 ## [0.1.13] - 2025-01-24
 
 ### Project Migration

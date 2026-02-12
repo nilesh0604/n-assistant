@@ -10,7 +10,7 @@ exports.ManifestParserImpl = {
     },
 };
 function convertToFirefoxCompatibleManifest(manifest) {
-    var _a;
+    let _a;
     const manifestCopy = Object.assign({}, manifest);
     manifestCopy.background = {
         scripts: [(_a = manifest.background) === null || _a === void 0 ? void 0 : _a.service_worker],

@@ -5,7 +5,7 @@ function t(key, substitutions) {
 t.devLocale = "";
 
 // index.ts
-var t2 = t;
+const t2 = t;
 export {
   t2 as t
 };

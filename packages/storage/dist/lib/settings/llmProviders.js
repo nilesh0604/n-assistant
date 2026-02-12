@@ -1,12 +1,12 @@
 "use strict";
-var __defProp = Object.defineProperty;
-var __defProps = Object.defineProperties;
-var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
-var __getOwnPropSymbols = Object.getOwnPropertySymbols;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __propIsEnum = Object.prototype.propertyIsEnumerable;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __spreadValues = (a, b) => {
+const __defProp = Object.defineProperty;
+const __defProps = Object.defineProperties;
+const __getOwnPropDescs = Object.getOwnPropertyDescriptors;
+const __getOwnPropSymbols = Object.getOwnPropertySymbols;
+const __hasOwnProp = Object.prototype.hasOwnProperty;
+const __propIsEnum = Object.prototype.propertyIsEnumerable;
+const __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+const __spreadValues = (a, b) => {
   for (var prop in b || (b = {}))
     if (__hasOwnProp.call(b, prop))
       __defNormalProp(a, prop, b[prop]);
@@ -17,17 +17,17 @@ var __spreadValues = (a, b) => {
     }
   return a;
 };
-var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
-var __async = (__this, __arguments, generator) => {
+const __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
+const __async = (__this, __arguments, generator) => {
   return new Promise((resolve, reject) => {
-    var fulfilled = (value) => {
+    const fulfilled = (value) => {
       try {
         step(generator.next(value));
       } catch (e) {
         reject(e);
       }
     };
-    var rejected = (value) => {
+    const rejected = (value) => {
       try {
         step(generator.throw(value));
       } catch (e) {
@@ -160,7 +160,7 @@ export function getDefaultProviderConfig(providerId) {
   }
 }
 export function getDefaultAgentModelParams(providerId, agentName) {
-  var _a;
+  let _a;
   const newParameters = ((_a = llmProviderParameters[providerId]) == null ? void 0 : _a[agentName]) || {
     temperature: 0.1,
     topP: 0.1
@@ -198,7 +198,7 @@ function ensureBackwardCompatibility(providerId, config) {
 export const llmProviderStore = __spreadProps(__spreadValues({}, storage), {
   setProvider(providerId, config) {
     return __async(this, null, function* () {
-      var _a, _b, _c, _d;
+      let _a, _b, _c, _d;
       if (!providerId) {
         throw new Error("Provider id cannot be empty");
       }

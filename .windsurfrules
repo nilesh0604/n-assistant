@@ -70,31 +70,46 @@
 - Use `@filename` or `@symbol` to pin specific files instead of scanning entire project
 - Start fresh sessions for new tasks to maintain context accuracy
 - Clear chat history when switching contexts (e.g., React to Node.js)
+- Monitor context window indicator - start new session when red
+- Close unnecessary tabs (Fast Context engine prioritizes open files)
 
 ### Planning & Execution
 - Use `/plan` command for architectural decisions and complex tasks
 - Follow plan-review-execute loop to save tokens
 - Break down large tasks: "Build dashboard" → "/plan Create dashboard layout"
 - Use `/execute` for implementation phases
+- Use `megaplan` for complex architectural changes
+- Set reasoning effort: Low/Medium for routine, High for complex logic
+- Use Arena Mode to compare models side-by-side
 
 ### MCP Server Integration
 - Available servers: `@sqlite`, `@github`, `@playwright`, `@web`
 - Use `@web Search` for latest API documentation
 - Use `@github Create PR` for repository management
 - Use `@sqlite Query` for local data operations
+- MCP configurations in `.windsurf/mcp-examples/`
 
 ### Terminal Execution
 - Use Cascade Dedicated Terminal for reliable command execution
 - Commands can handle interactive prompts
 - Prefer workspace-scoped commands with `pnpm -F <workspace>`
+- Use batched commands for efficiency
 
 ### Memory Management
 - Review and delete outdated AI memories regularly
 - Archive completed project plans separately
 - Keep active memories limited to current sprint
+- Categories: Active, Archive, Reference, Temporary
 
 ### Team Collaboration
 - Windsurf handles architect role (planning, structure)
 - VS Code/Copilot handles developer role (implementation)
 - Shared context files: `CLAUDE.md`, `.windsurfrules`, `TODO.md`
 - Use structured PR comments with @mentions for specific files
+- Clear role distribution for complex features
+
+### Token Optimization
+- Batch similar requests (@src/agent/ Review all agent files)
+- Use structured prompts (/plan, /execute, /test)
+- Avoid long conversations and full project scans
+- Keep .windsurfrules under 6,000 tokens (~4,500 words)
