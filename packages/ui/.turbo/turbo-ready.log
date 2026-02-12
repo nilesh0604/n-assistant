@@ -3,28 +3,3 @@
 > @extension/ui@0.1.13 ready /Users/Nilesh_Shinde/iSpace/n-assistant/packages/ui
 > node build.mjs
 
-node:internal/modules/cjs/loader:1225
-  const err = new Error(message);
-              ^
-
-Error: Cannot find module 'chokidar'
-Require stack:
-- /Users/Nilesh_Shinde/iSpace/n-assistant/packages/ui/node_modules/tsc-alias/dist/index.js
-[90m    at Function._resolveFilename (node:internal/modules/cjs/loader:1225:15)[39m
-[90m    at Function._load (node:internal/modules/cjs/loader:1055:27)[39m
-[90m    at TracingChannel.traceSync (node:diagnostics_channel:322:14)[39m
-[90m    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)[39m
-[90m    at Module.require (node:internal/modules/cjs/loader:1311:12)[39m
-[90m    at require (node:internal/modules/helpers:136:16)[39m
-    at Object.<anonymous> [90m(/Users/Nilesh_Shinde/iSpace/n-assistant/packages/ui/[39mnode_modules/[4mtsc-alias[24m/dist/index.js:13:20[90m)[39m
-[90m    at Module._compile (node:internal/modules/cjs/loader:1554:14)[39m
-[90m    at Object..js (node:internal/modules/cjs/loader:1706:10)[39m
-[90m    at Module.load (node:internal/modules/cjs/loader:1289:32)[39m {
-  code: [32m'MODULE_NOT_FOUND'[39m,
-  requireStack: [
-    [32m'/Users/Nilesh_Shinde/iSpace/n-assistant/packages/ui/node_modules/tsc-alias/dist/index.js'[39m
-  ]
-}
-
-Node.js v22.14.0
-[41m[30m ELIFECYCLE [39m[49m [31mCommand failed with exit code 1.[39m
