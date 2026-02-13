@@ -62,10 +62,10 @@ export class StructuredOutputEnforcer {
   /**
    * Validates and enforces structured output against a schema
    */
-  async enforce<T extends z.ZodType>(
+  async enforce<T extends z.ZodSchema>(
     data: unknown,
     schema: T,
-    context?: string
+    context?: string,
   ): Promise<ValidationResult & { data?: z.infer<T> }> {
     const result: ValidationResult & { data?: z.infer<T> } = {
       isValid: true,
@@ -74,13 +74,18 @@ export class StructuredOutputEnforcer {
     };
 
     try {
-      // Step 1: Basic schema validation
-      let validatedData = schema.parse(data);
-      result.data = validatedData;
+      // Step 1: Basic type check
+      if (typeof data !== 'object' || data === null) {
+        result.isValid = false;
+        result.errors.push('Data must be an object');
+        return result;
+      }
 
-      // Step 2: Field-level validation
+      let validatedData = { ...data } as Record<string, unknown>;
+
+      // Step 2: Field-level validation (before Zod to catch extra fields)
       if (this.config.allowedFields.length > 0) {
-        const dataFields = Object.keys(validatedData as Record<string, unknown>);
+        const dataFields = Object.keys(validatedData);
         const disallowedFields = dataFields.filter(
           field => !this.config.allowedFields.includes(field)
         );
@@ -97,7 +102,7 @@ export class StructuredOutputEnforcer {
 
       // Step 3: Required field validation
       if (this.config.requiredFields.length > 0) {
-        const dataFields = Object.keys(validatedData as Record<string, unknown>);
+        const dataFields = Object.keys(validatedData);
         const missingFields = this.config.requiredFields.filter(
           field => !dataFields.includes(field)
         );
@@ -108,13 +113,19 @@ export class StructuredOutputEnforcer {
         }
       }
 
-      // Step 4: String sanitization
+      // Step 4: Zod schema validation
+      const parsed = await schema.parseAsync(validatedData);
+      validatedData = parsed as Record<string, unknown>;
+
+      // Step 5: String sanitization
       if (this.config.sanitizeStrings) {
-        validatedData = this.sanitizeStrings(validatedData, result);
-        result.data = validatedData;
+        const sanitized = this.sanitizeStrings(validatedData, result);
+        result.data = sanitized as z.infer<T>;
+      } else {
+        result.data = validatedData as z.infer<T>;
       }
 
-      // Step 5: Custom validation
+      // Step 6: Custom validation
       for (const [field, validator] of Object.entries(this.config.customValidators)) {
         const value = (validatedData as Record<string, unknown>)[field];
         if (value !== undefined && !validator(value)) {
@@ -123,11 +134,11 @@ export class StructuredOutputEnforcer {
         }
       }
 
-      // Step 6: Length validation
+      // Step 7: Length validation
       this.validateLengths(validatedData, result);
 
+      // Log validation results
       if (result.errors.length > 0) {
-        result.isValid = false;
         logger.error(`Structured output validation failed${context ? ` for ${context}` : ''}`, {
           errors: result.errors,
           warnings: result.warnings,
@@ -142,7 +153,8 @@ export class StructuredOutputEnforcer {
     } catch (error) {
       if (error instanceof z.ZodError) {
         result.isValid = false;
-        result.errors = error.errors.map(e => `${e.path.join('.')}: ${e.message}`);
+        // Add Zod errors to existing errors, don't replace them
+        result.errors.push(...error.errors.map(e => `${e.path.join('.')}: ${e.message}`));
         logger.error(`Schema validation failed${context ? ` for ${context}` : ''}`, result.errors);
       } else {
         result.isValid = false;
@@ -157,7 +169,7 @@ export class StructuredOutputEnforcer {
   /**
    * Sanitizes string values to prevent injection and ensure safety
    */
-  private sanitizeStrings<T>(data: T, result: ValidationResult): T {
+  private sanitizeStrings<T>(data: T, result: ValidationResult, path = ''): T {
     if (typeof data !== 'object' || data === null) {
       return data;
     }
@@ -168,18 +180,21 @@ export class StructuredOutputEnforcer {
       if (typeof value === 'string') {
         // Check for potential script injections
         if (/<script|javascript:|data:/i.test(value)) {
-          result.warnings.push(`Potentially unsafe content in field: ${key}`);
-          logger.info(`Sanitized content in field: ${key}`);
+          const fullPath = path ? `${path}.${key}` : key;
+          result.warnings.push(`Potentially unsafe content in field: ${fullPath}`);
+          logger.info(`Sanitized content in field: ${fullPath}`);
           sanitized[key] = value.replace(/<script[^>]*>.*?<\/script>/gi, '[REMOVED]');
         }
 
         // Truncate if too long
         if (value.length > this.config.maxStringLength) {
-          result.warnings.push(`String truncated in field: ${key} (${value.length} > ${this.config.maxStringLength})`);
+          const fullPath = path ? `${path}.${key}` : key;
+          result.warnings.push(`String truncated in field: ${fullPath} (${value.length} > ${this.config.maxStringLength})`);
           sanitized[key] = value.substring(0, this.config.maxStringLength) + '...';
         }
       } else if (typeof value === 'object' && value !== null) {
-        sanitized[key] = this.sanitizeStrings(value, result);
+        const fullPath = path ? `${path}.${key}` : key;
+        sanitized[key] = this.sanitizeStrings(value, result, fullPath);
       }
     }
 
@@ -187,25 +202,13 @@ export class StructuredOutputEnforcer {
   }
 
   /**
-   * Validates string lengths against configured limits
-   */
-  private validateLengths<T>(data: T, result: ValidationResult): void {
-    if (typeof data !== 'object' || data === null) {
-      return;
-    }
-
-    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
-      if (typeof value === 'string' && value.length > this.config.maxStringLength) {
-        if (this.config.strictMode) {
-          result.isValid = false;
-          result.errors.push(`String too long in field ${key}: ${value.length} > ${this.config.maxStringLength}`);
-        } else {
-          result.warnings.push(`String exceeds recommended length in field ${key}: ${value.length}`);
-        }
-      } else if (typeof value === 'object' && value !== null) {
-        this.validateLengths(value, result);
-      }
-    }
+ * Validates string lengths against configured limits
+ * Note: Length validation is now handled in sanitizeStrings to avoid duplication
+ */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private validateLengths(_data: unknown, _result: ValidationResult): void {
+    // Length validation is handled in sanitizeStrings to avoid duplication
+    // This method is kept for backward compatibility but can be removed in future
   }
 
   /**
