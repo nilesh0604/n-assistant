@@ -995,5 +995,138 @@
         "example": "Opção não encontrada"
       }
     }
+  },
+  "act_readText_start": {
+    "message": "Lendo texto do elemento no índice $INDEX$",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_readText_ok": {
+    "message": "Texto lido com sucesso do elemento no índice $INDEX$",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_readText_failed": {
+    "message": "Falha ao ler texto: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Elemento não legível"
+      }
+    }
+  },
+  "act_waitForElement_start": {
+    "message": "Aguardando elemento no índice $INDEX$ aparecer",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_waitForElement_ok": {
+    "message": "Elemento no índice $INDEX$ apareceu",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_waitForElement_timeout": {
+    "message": "Elemento no índice $INDEX$ não apareceu dentro de $TIMEOUT$ms",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      },
+      "timeout": {
+        "content": "$2",
+        "example": "5000"
+      }
+    }
+  },
+  "act_waitForElement_failed": {
+    "message": "Falha ao aguardar elemento: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Erro de timeout"
+      }
+    }
+  },
+  "act_openUrl_start": {
+    "message": "Navegando para $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://example.com"
+      }
+    }
+  },
+  "act_openUrl_ok": {
+    "message": "Navegado com sucesso para $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://example.com"
+      }
+    }
+  },
+  "act_openUrl_failed": {
+    "message": "Falha ao navegar para $URL$: $ERROR$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://example.com"
+      },
+      "error": {
+        "content": "$2",
+        "example": "URL inválida"
+      }
+    }
+  },
+  "act_typeText_start": {
+    "message": "Digitando '$TEXT$' no elemento no índice $INDEX$",
+    "placeholders": {
+      "text": {
+        "content": "$1",
+        "example": "Olá Mundo"
+      },
+      "index": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "act_typeText_ok": {
+    "message": "'$TEXT$' digitado com sucesso no elemento no índice $INDEX$",
+    "placeholders": {
+      "text": {
+        "content": "$1",
+        "example": "Olá Mundo"
+      },
+      "index": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "act_typeText_failed": {
+    "message": "Falha ao digitar texto: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Elemento não focalizável"
+      }
+    }
   }
 }

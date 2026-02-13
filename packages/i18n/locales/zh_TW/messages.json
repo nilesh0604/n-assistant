@@ -981,11 +981,144 @@
     }
   },
   "act_selectDropdownOption_failed": {
-    "message": "無法選取選項：$ERROR$",
+    "message": "選擇選項失敗：$ERROR$",
     "placeholders": {
       "error": {
         "content": "$1",
-        "example": "Option not found"
+        "example": "找不到選項"
+      }
+    }
+  },
+  "act_readText_start": {
+    "message": "讀取索引 $INDEX$ 處元素的文本",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_readText_ok": {
+    "message": "成功讀取索引 $INDEX$ 處元素的文本",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_readText_failed": {
+    "message": "讀取文本失敗：$ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "元素不可讀"
+      }
+    }
+  },
+  "act_waitForElement_start": {
+    "message": "等待索引 $INDEX$ 處元素出現",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_waitForElement_ok": {
+    "message": "索引 $INDEX$ 處元素已出現",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_waitForElement_timeout": {
+    "message": "索引 $INDEX$ 處元素在 $TIMEOUT$ 毫秒內未出現",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      },
+      "timeout": {
+        "content": "$2",
+        "example": "5000"
+      }
+    }
+  },
+  "act_waitForElement_failed": {
+    "message": "等待元素失敗：$ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "超時錯誤"
+      }
+    }
+  },
+  "act_openUrl_start": {
+    "message": "導航到 $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://example.com"
+      }
+    }
+  },
+  "act_openUrl_ok": {
+    "message": "成功導航到 $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://example.com"
+      }
+    }
+  },
+  "act_openUrl_failed": {
+    "message": "導航到 $URL$ 失敗：$ERROR$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://example.com"
+      },
+      "error": {
+        "content": "$2",
+        "example": "無效的 URL"
+      }
+    }
+  },
+  "act_typeText_start": {
+    "message": "在索引 $INDEX$ 處元素輸入 '$TEXT$'",
+    "placeholders": {
+      "text": {
+        "content": "$1",
+        "example": "你好世界"
+      },
+      "index": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "act_typeText_ok": {
+    "message": "成功在索引 $INDEX$ 處元素輸入 '$TEXT$'",
+    "placeholders": {
+      "text": {
+        "content": "$1",
+        "example": "你好世界"
+      },
+      "index": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "act_typeText_failed": {
+    "message": "輸入文本失敗：$ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "元素無法聚焦"
       }
     }
   }

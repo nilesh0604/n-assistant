@@ -1,12 +1,12 @@
 "use strict";
-const __defProp = Object.defineProperty;
-const __defProps = Object.defineProperties;
-const __getOwnPropDescs = Object.getOwnPropertyDescriptors;
-const __getOwnPropSymbols = Object.getOwnPropertySymbols;
-const __hasOwnProp = Object.prototype.hasOwnProperty;
-const __propIsEnum = Object.prototype.propertyIsEnumerable;
-const __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-const __spreadValues = (a, b) => {
+var __defProp = Object.defineProperty;
+var __defProps = Object.defineProperties;
+var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
+var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __spreadValues = (a, b) => {
   for (var prop in b || (b = {}))
     if (__hasOwnProp.call(b, prop))
       __defNormalProp(a, prop, b[prop]);
@@ -17,7 +17,7 @@ const __spreadValues = (a, b) => {
     }
   return a;
 };
-const __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
+var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 export function dereferenceJsonSchema(schema) {
   const clonedSchema = JSON.parse(JSON.stringify(schema));
   const definitions = clonedSchema.$defs || {};

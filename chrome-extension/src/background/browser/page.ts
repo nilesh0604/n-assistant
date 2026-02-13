@@ -927,11 +927,11 @@ export default class Page {
 
       // Evaluate the select element to get all options
       const options = await elementHandle.evaluate(select => {
-        if (!(select instanceof HTMLSelectElement)) {
+        if (!(select as any).options) {
           throw new Error('Element is not a select element');
         }
-
-        return Array.from(select.options).map(option => ({
+        const selectElement = select as any;
+        return Array.from(selectElement.options).map((option: any) => ({
           index: option.index,
           text: option.text, // Not trimming to maintain exact match for selection
           value: option.value,
@@ -977,18 +977,22 @@ export default class Page {
       // Verify dropdown and select option in one call
       const result = await elementHandle.evaluate(
         (select, optionText, elementIndex) => {
-          if (!(select instanceof HTMLSelectElement)) {
+          if (!(select as any).options) {
             return {
               found: false,
               message: `Element with index ${elementIndex} is not a SELECT`,
             };
           }
 
-          const options = Array.from(select.options);
-          const option = options.find(opt => opt.text.trim() === optionText);
+          const options = Array.from((select as any).options).map((opt: any) => ({
+            index: opt.index,
+            text: opt.text,
+            value: opt.value,
+          }));
+          const option = options.find((opt: any) => opt.text.trim() === optionText);
 
           if (!option) {
-            const availableOptions = options.map(o => o.text.trim()).join('", "');
+            const availableOptions = options.map((o: any) => o.text.trim()).join('", "');
             return {
               found: false,
               message: `Option "${optionText}" not found in dropdown element with index ${elementIndex}. Available options: "${availableOptions}"`,
@@ -996,18 +1000,23 @@ export default class Page {
           }
 
           // Set the value and dispatch events
-          const previousValue = select.value;
-          select.value = option.value;
+          const previousValue = (select as any).value;
+          (select as any).value = (option as any).value;
 
           // Only dispatch events if the value actually changed
-          if (previousValue !== option.value) {
-            select.dispatchEvent(new Event('change', { bubbles: true }));
-            select.dispatchEvent(new Event('input', { bubbles: true }));
+          if (previousValue !== (option as any).value) {
+            const changeEvent = (select as any).ownerDocument.createEvent('HTMLEvents');
+            changeEvent.initEvent('change', true, true);
+            (select as any).dispatchEvent(changeEvent);
+
+            const inputEvent = (select as any).ownerDocument.createEvent('HTMLEvents');
+            inputEvent.initEvent('input', true, true);
+            (select as any).dispatchEvent(inputEvent);
           }
 
           return {
             found: true,
-            message: `Selected option "${optionText}" with value "${option.value}"`,
+            message: `Selected option "${optionText}" with value "${(option as any).value}"`,
           };
         },
         text,
@@ -1138,31 +1147,42 @@ export default class Page {
         return false;
       });
       const isReadOnly = await element.evaluate(el => {
-        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-          return el.readOnly;
+        if ((el as any).tagName === 'INPUT' || (el as any).tagName === 'TEXTAREA') {
+          return (el as any).readOnly;
         }
         return false;
       });
       const isDisabled = await element.evaluate(el => {
-        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-          return el.disabled;
+        if ((el as any).tagName === 'INPUT' || (el as any).tagName === 'TEXTAREA') {
+          return (el as any).disabled;
         }
         return false;
       });
 
+      const isInputOrTextArea = await element.evaluate(el => (el as any).tagName === 'INPUT' || (el as any).tagName === 'TEXTAREA');
+
+      let isReadOnlyMutable = isReadOnly;
+      if (!isInputOrTextArea) {
+        isReadOnlyMutable = false;
+      }
+
       // Choose appropriate input method based on element properties
-      if ((isContentEditable || tagName === 'input') && !isReadOnly && !isDisabled) {
+      if ((isContentEditable || tagName === 'input') && !isReadOnlyMutable && !isDisabled) {
         // Clear content and set value directly
         await element.evaluate(el => {
           if (el instanceof HTMLElement) {
             el.textContent = '';
           }
           if ('value' in el) {
-            (el as HTMLInputElement).value = '';
+            (el as any).value = '';
           }
           // Dispatch events
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-          el.dispatchEvent(new Event('change', { bubbles: true }));
+          const inputEvent = (el as any).ownerDocument.createEvent('HTMLEvents');
+          inputEvent.initEvent('input', true, true);
+          (el as any).dispatchEvent(inputEvent);
+          const changeEvent = (el as any).ownerDocument.createEvent('HTMLEvents');
+          changeEvent.initEvent('change', true, true);
+          (el as any).dispatchEvent(changeEvent);
         });
 
         // Type the text with a small delay between keypresses
@@ -1170,14 +1190,18 @@ export default class Page {
       } else {
         // Use direct value setting for other types of elements
         await element.evaluate((el, value) => {
-          if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-            el.value = value;
+          if ((el as any).tagName === 'INPUT' || (el as any).tagName === 'TEXTAREA') {
+            (el as any).value = value;
           } else if (el instanceof HTMLElement && el.isContentEditable) {
             el.textContent = value;
           }
           // Dispatch events
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-          el.dispatchEvent(new Event('change', { bubbles: true }));
+          const inputEvent = (el as any).ownerDocument.createEvent('HTMLEvents');
+          inputEvent.initEvent('input', true, true);
+          (el as any).dispatchEvent(inputEvent);
+          const changeEvent = (el as any).ownerDocument.createEvent('HTMLEvents');
+          changeEvent.initEvent('change', true, true);
+          (el as any).dispatchEvent(changeEvent);
         }, text);
       }
 
@@ -1236,6 +1260,13 @@ export default class Page {
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
+      // Check if element is a file input
+      const isFileInput = await element.evaluate(el => (el as any).type === 'file');
+
+      if (isFileInput) {
+        break;
+      }
+
       // Check if element is in viewport
       const isVisible = await element.evaluate(el => {
         const rect = el.getBoundingClientRect();
@@ -1618,5 +1649,139 @@ export default class Page {
 
       throw new URLNotAllowedError(errorMessage);
     }
+  }
+
+  // Additional methods for new command types
+
+  async getElementText(elementNode: DOMElementNode, maxChars: number = 500): Promise<string> {
+    if (!this._puppeteerPage) {
+      throw new Error('Puppeteer is not connected');
+    }
+
+    try {
+      const element = await this.locateElement(elementNode);
+      if (!element) {
+        throw new Error(`Element: ${elementNode} not found`);
+      }
+
+      // Get text content
+      const text = await element.evaluate((el: Element, max: number) => {
+        const text = el.textContent || '';
+        return text.substring(0, max);
+      }, maxChars);
+
+      return text.trim();
+    } catch (error) {
+      logger.error(`Failed to get element text: ${error}`);
+      throw error;
+    }
+  }
+
+  async waitForElement(index: number, timeoutMs: number = 5000): Promise<boolean> {
+    if (!this._puppeteerPage) {
+      throw new Error('Puppeteer is not connected');
+    }
+
+    try {
+      // Get current state to find the element
+      const state = await this.getState(false);
+      const elementNode = state?.selectorMap.get(index);
+
+      if (!elementNode) {
+        throw new Error(`Element with index ${index} not found`);
+      }
+
+      // Create a selector for the element
+      const selector = this._generateSelector(elementNode);
+
+      // Wait for element to appear
+      await this._puppeteerPage.waitForSelector(selector, {
+        timeout: timeoutMs,
+        visible: true,
+      });
+
+      return true;
+    } catch (error) {
+      if (error instanceof Error && error.name === 'TimeoutError') {
+        return false;
+      }
+      logger.error(`Failed to wait for element: ${error}`);
+      throw error;
+    }
+  }
+
+  async clearElement(elementNode: DOMElementNode): Promise<void> {
+    if (!this._puppeteerPage) {
+      throw new Error('Puppeteer is not connected');
+    }
+
+    try {
+      const element = await this.locateElement(elementNode);
+      if (!element) {
+        throw new Error(`Element: ${elementNode} not found`);
+      }
+
+      // Clear the element content
+      await element.click();
+      await this._puppeteerPage.keyboard.down('Control');
+      await this._puppeteerPage.keyboard.press('KeyA');
+      await this._puppeteerPage.keyboard.up('Control');
+      await this._puppeteerPage.keyboard.press('Delete');
+    } catch (error) {
+      logger.error(`Failed to clear element: ${error}`);
+      throw error;
+    }
+  }
+
+  async typeText(elementNode: DOMElementNode, text: string): Promise<void> {
+    if (!this._puppeteerPage) {
+      throw new Error('Puppeteer is not connected');
+    }
+
+    try {
+      const element = await this.locateElement(elementNode);
+      if (!element) {
+        throw new Error(`Element: ${elementNode} not found`);
+      }
+
+      // Type the text
+      await element.type(text);
+    } catch (error) {
+      logger.error(`Failed to type text: ${error}`);
+      throw error;
+    }
+  }
+
+  async navigate(url: string): Promise<void> {
+    await this.navigateTo(url);
+  }
+
+  private _generateSelector(elementNode: DOMElementNode): string {
+    // Generate a CSS selector for the element
+    if (elementNode.attributes.id) {
+      return `#${elementNode.attributes.id}`;
+    }
+
+    let selector = elementNode.tagName?.toLowerCase() || '';
+
+    if (elementNode.attributes.class) {
+      const classes = elementNode.attributes.class.split(/\s+/).slice(0, 2);
+      selector += '.' + classes.join('.');
+    }
+
+    // Add nth-child if needed
+    if (elementNode.parent) {
+      const siblings = this.getChildren(elementNode.parent);
+      const index = siblings.indexOf(elementNode);
+      if (index > 0) {
+        selector += `:nth-child(${index + 1})`;
+      }
+    }
+
+    return selector;
+  }
+
+  private getChildren(element: DOMElementNode): DOMElementNode[] {
+    return element.children.filter(child => child instanceof DOMElementNode) as DOMElementNode[];
   }
 }

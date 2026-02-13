@@ -1,14 +1,14 @@
 "use strict";
-const __async = (__this, __arguments, generator) => {
+var __async = (__this, __arguments, generator) => {
   return new Promise((resolve, reject) => {
-    const fulfilled = (value) => {
+    var fulfilled = (value) => {
       try {
         step(generator.next(value));
       } catch (e) {
         reject(e);
       }
     };
-    const rejected = (value) => {
+    var rejected = (value) => {
       try {
         step(generator.throw(value));
       } catch (e) {
@@ -50,7 +50,7 @@ function checkStoragePermission(storageEnum) {
   }
 }
 export function createStorage(key, fallback, config) {
-  let _a, _b, _c, _d, _e, _f;
+  var _a, _b, _c, _d, _e, _f;
   let cache = null;
   let initedCache = false;
   let listeners = [];
@@ -69,7 +69,7 @@ export function createStorage(key, fallback, config) {
     globalSessionAccessLevelFlag = true;
   }
   const get = () => __async(null, null, function* () {
-    let _a2;
+    var _a2;
     checkStoragePermission(storageEnum);
     const value = yield chrome == null ? void 0 : chrome.storage[storageEnum].get([key]);
     if (!value) {

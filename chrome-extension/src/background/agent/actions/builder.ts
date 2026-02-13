@@ -22,6 +22,10 @@ import {
   nextPageActionSchema,
   scrollToTopActionSchema,
   scrollToBottomActionSchema,
+  readTextActionSchema,
+  waitForElementActionSchema,
+  openUrlActionSchema,
+  typeTextActionSchema,
 } from './schemas';
 import { z } from 'zod';
 import { createLogger } from '@src/background/log';
@@ -48,7 +52,7 @@ export class Action {
     public readonly schema: ActionSchema,
     // Whether this action has an index argument
     public readonly hasIndex: boolean = false,
-  ) {}
+  ) { }
 
   async call(input: unknown): Promise<ActionResult> {
     // Validate input before calling the handler
@@ -701,6 +705,173 @@ export class ActionBuilder {
       true,
     );
     actions.push(selectDropdownOption);
+
+    // Additional Command Types from Design Document
+
+    // Read text command
+    const readText = new Action(
+      async (input: z.infer<typeof readTextActionSchema.schema>) => {
+        const intent = input.intent || t('act_readText_start', [input.index.toString()]);
+        this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_START, intent);
+
+        const page = await this.context.browserContext.getCurrentPage();
+        const state = await page.getState();
+
+        const elementNode = state?.selectorMap.get(input.index);
+        if (!elementNode) {
+          const errorMsg = t('act_errors_elementNotExist', [input.index.toString()]);
+          this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_FAIL, errorMsg);
+          return new ActionResult({
+            error: errorMsg,
+            includeInMemory: true,
+          });
+        }
+
+        try {
+          const text = await page.getElementText(elementNode, input.max_chars);
+          const msg = t('act_readText_ok', [input.index.toString()]);
+          this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_OK, msg);
+          return new ActionResult({
+            extractedContent: text,
+            includeInMemory: true,
+          });
+        } catch (error) {
+          const errorMsg = t('act_readText_failed', [
+            error instanceof Error ? error.message : String(error),
+          ]);
+          this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_FAIL, errorMsg);
+          return new ActionResult({
+            error: errorMsg,
+            includeInMemory: true,
+          });
+        }
+      },
+      readTextActionSchema,
+      true,
+    );
+    actions.push(readText);
+
+    // Wait for element command
+    const waitForElement = new Action(
+      async (input: z.infer<typeof waitForElementActionSchema.schema>) => {
+        const intent = input.intent || t('act_waitForElement_start', [input.index.toString()]);
+        this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_START, intent);
+
+        const page = await this.context.browserContext.getCurrentPage();
+
+        try {
+          const elementFound = await page.waitForElement(input.index, input.timeout_ms);
+
+          if (elementFound) {
+            const msg = t('act_waitForElement_ok', [input.index.toString()]);
+            this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_OK, msg);
+            return new ActionResult({
+              extractedContent: `Element ${input.index} appeared within ${input.timeout_ms}ms`,
+              includeInMemory: true,
+            });
+          } else {
+            const errorMsg = t('act_waitForElement_timeout', [input.index.toString(), input.timeout_ms.toString()]);
+            this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_FAIL, errorMsg);
+            return new ActionResult({
+              error: errorMsg,
+              includeInMemory: true,
+            });
+          }
+        } catch (error) {
+          const errorMsg = t('act_waitForElement_failed', [
+            error instanceof Error ? error.message : String(error),
+          ]);
+          this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_FAIL, errorMsg);
+          return new ActionResult({
+            error: errorMsg,
+            includeInMemory: true,
+          });
+        }
+      },
+      waitForElementActionSchema,
+      true,
+    );
+    actions.push(waitForElement);
+
+    // Open URL command
+    const openUrl = new Action(
+      async (input: z.infer<typeof openUrlActionSchema.schema>) => {
+        const intent = input.intent || t('act_openUrl_start', [input.url]);
+        this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_START, intent);
+
+        try {
+          const page = await this.context.browserContext.getCurrentPage();
+          await page.navigate(input.url);
+          const msg = t('act_openUrl_ok', [input.url]);
+          this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_OK, msg);
+          return new ActionResult({
+            extractedContent: msg,
+            includeInMemory: true,
+          });
+        } catch (error) {
+          const errorMsg = t('act_openUrl_failed', [
+            input.url,
+            error instanceof Error ? error.message : String(error),
+          ]);
+          this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_FAIL, errorMsg);
+          return new ActionResult({
+            error: errorMsg,
+            includeInMemory: true,
+          });
+        }
+      },
+      openUrlActionSchema,
+      false,
+    );
+    actions.push(openUrl);
+
+    // Type text command
+    const typeText = new Action(
+      async (input: z.infer<typeof typeTextActionSchema.schema>) => {
+        const intent = input.intent || t('act_typeText_start', [input.text, input.index.toString()]);
+        this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_START, intent);
+
+        const page = await this.context.browserContext.getCurrentPage();
+        const state = await page.getState();
+
+        const elementNode = state?.selectorMap.get(input.index);
+        if (!elementNode) {
+          const errorMsg = t('act_errors_elementNotExist', [input.index.toString()]);
+          this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_FAIL, errorMsg);
+          return new ActionResult({
+            error: errorMsg,
+            includeInMemory: true,
+          });
+        }
+
+        try {
+          // Clear first if requested
+          if (input.clear_first) {
+            await page.clearElement(elementNode);
+          }
+
+          await page.typeText(elementNode, input.text);
+          const msg = t('act_typeText_ok', [input.text, input.index.toString()]);
+          this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_OK, msg);
+          return new ActionResult({
+            extractedContent: msg,
+            includeInMemory: true,
+          });
+        } catch (error) {
+          const errorMsg = t('act_typeText_failed', [
+            error instanceof Error ? error.message : String(error),
+          ]);
+          this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_FAIL, errorMsg);
+          return new ActionResult({
+            error: errorMsg,
+            includeInMemory: true,
+          });
+        }
+      },
+      typeTextActionSchema,
+      true,
+    );
+    actions.push(typeText);
 
     return actions;
   }

@@ -213,3 +213,44 @@ export const waitActionSchema: ActionSchema = {
     seconds: z.number().int().default(3).describe('amount of seconds'),
   }),
 };
+
+// Additional Command Types from Design Document
+export const readTextActionSchema: ActionSchema = {
+  name: 'read_text',
+  description: 'Read and return text content of an element by its index',
+  schema: z.object({
+    intent: z.string().default('').describe('purpose of this action'),
+    index: z.number().describe('index of the element to read text from'),
+    max_chars: z.number().int().optional().default(500).describe('maximum number of characters to return'),
+  }),
+};
+
+export const waitForElementActionSchema: ActionSchema = {
+  name: 'wait_for_element',
+  description: 'Wait until an element appears or timeout occurs',
+  schema: z.object({
+    intent: z.string().default('').describe('purpose of this action'),
+    index: z.number().describe('index of the element to wait for'),
+    timeout_ms: z.number().int().optional().default(5000).describe('timeout in milliseconds'),
+  }),
+};
+
+export const openUrlActionSchema: ActionSchema = {
+  name: 'open_url',
+  description: 'Navigate current tab to a specific URL',
+  schema: z.object({
+    intent: z.string().default('').describe('purpose of this action'),
+    url: z.string().describe('URL to navigate to'),
+  }),
+};
+
+export const typeTextActionSchema: ActionSchema = {
+  name: 'type_text',
+  description: 'Focus an element and type text into it',
+  schema: z.object({
+    intent: z.string().default('').describe('purpose of this action'),
+    index: z.number().describe('index of the element to type into'),
+    text: z.string().describe('text to type'),
+    clear_first: z.boolean().optional().default(false).describe('clear existing text before typing'),
+  }),
+};

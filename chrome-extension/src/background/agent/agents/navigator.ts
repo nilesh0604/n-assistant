@@ -30,6 +30,8 @@ import { AgentStepRecord } from '../history';
 import { type DOMHistoryElement } from '@src/background/browser/dom/history/view';
 import { ElementFingerprintService } from '@src/background/browser/dom/fingerprint';
 import { ElementLocatorService } from '@src/background/browser/dom/locator';
+import { ErrorRecoveryService } from '@src/background/browser/dom/error-recovery';
+import { HierarchicalDOMService } from '@src/background/browser/dom/hierarchical-dom';
 import { adaptiveDelayService, type DelayContext } from '../adaptive-delay';
 
 const logger = createLogger('NavigatorAgent');
@@ -91,6 +93,8 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
   private _stateHistory: BrowserStateHistory | null = null;
   private fingerprintService: ElementFingerprintService;
   private elementLocatorService: ElementLocatorService;
+  private errorRecoveryService: ErrorRecoveryService;
+  private hierarchicalDOMService: HierarchicalDOMService;
 
   constructor(
     actionRegistry: NavigatorActionRegistry,
@@ -109,6 +113,12 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
 
     // Initialize element locator service for multi-strategy element location
     this.elementLocatorService = new ElementLocatorService();
+
+    // Initialize error recovery service for smart error handling
+    this.errorRecoveryService = new ErrorRecoveryService();
+
+    // Initialize hierarchical DOM service for advanced DOM traversal
+    this.hierarchicalDOMService = new HierarchicalDOMService();
 
   }
 
@@ -400,7 +410,7 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
 
     for (const [i, action] of actions.entries()) {
       const actionName = Object.keys(action)[0];
-      const actionArgs = action[actionName];
+      const actionArgs = action[actionName] as Record<string, unknown>;
 
       // Calculate adaptive delay between actions
       const delayContext: DelayContext = {
@@ -409,7 +419,7 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
         consecutiveFastActions,
         pageHasAnimations: false, // Could be detected from browserState
         pageIsLoading: false, // Could be detected from browserState
-        elementType: (actionArgs as any)?.element?.tagName,
+        elementType: (actionArgs as { element?: { tagName?: string } })?.element?.tagName,
         isFormAction: ['input_text', 'select_dropdown_option'].includes(actionName),
         isNavigationAction: actionName === 'open_url',
       };
@@ -556,12 +566,17 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
     if (!element) {
       validation.reason = `Element with index ${elementIndex} not found in selector map`;
 
-      // Try to find alternative using fingerprint matching
-      const alternative = await this.findAlternativeElement(elementIndex, browserState);
-      if (alternative !== null) {
-        validation.alternativeIndex = alternative;
+      // Use error recovery service to find the element
+      const recoveryResult = await this.errorRecoveryService.recoverFromError(
+        'element_not_found',
+        elementIndex,
+        browserState
+      );
+
+      if (recoveryResult.success && recoveryResult.index !== undefined) {
+        validation.alternativeIndex = recoveryResult.index;
         validation.canExecute = true;
-        validation.reason = `Using alternative element index ${alternative}`;
+        validation.reason = `Recovered element using ${recoveryResult.strategy} strategy (attempt ${recoveryResult.attempts})`;
       }
       return validation;
     }
@@ -571,6 +586,19 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
     // Check if element is visible
     if (!element.isVisible) {
       validation.reason = `Element with index ${elementIndex} is not visible`;
+
+      // Try to recover visibility issues
+      const recoveryResult = await this.errorRecoveryService.recoverFromError(
+        'element_not_visible',
+        elementIndex,
+        browserState
+      );
+
+      if (recoveryResult.success && recoveryResult.index !== undefined) {
+        validation.alternativeIndex = recoveryResult.index;
+        validation.canExecute = true;
+        validation.reason = `Recovered visible element using ${recoveryResult.strategy} strategy`;
+      }
       return validation;
     }
     validation.elementVisible = true;

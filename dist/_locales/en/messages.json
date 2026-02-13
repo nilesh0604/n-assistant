@@ -996,5 +996,138 @@
         "example": "Option not found"
       }
     }
+  },
+  "act_readText_start": {
+    "message": "Reading text from element at index $INDEX$",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_readText_ok": {
+    "message": "Successfully read text from element at index $INDEX$",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_readText_failed": {
+    "message": "Failed to read text: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Element not readable"
+      }
+    }
+  },
+  "act_waitForElement_start": {
+    "message": "Waiting for element at index $INDEX$ to appear",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_waitForElement_ok": {
+    "message": "Element at index $INDEX$ appeared",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "act_waitForElement_timeout": {
+    "message": "Element at index $INDEX$ did not appear within $TIMEOUT$ms",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "5"
+      },
+      "timeout": {
+        "content": "$2",
+        "example": "5000"
+      }
+    }
+  },
+  "act_waitForElement_failed": {
+    "message": "Failed to wait for element: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Timeout error"
+      }
+    }
+  },
+  "act_openUrl_start": {
+    "message": "Navigating to $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://example.com"
+      }
+    }
+  },
+  "act_openUrl_ok": {
+    "message": "Successfully navigated to $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://example.com"
+      }
+    }
+  },
+  "act_openUrl_failed": {
+    "message": "Failed to navigate to $URL$: $ERROR$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://example.com"
+      },
+      "error": {
+        "content": "$2",
+        "example": "Invalid URL"
+      }
+    }
+  },
+  "act_typeText_start": {
+    "message": "Typing '$TEXT$' into element at index $INDEX$",
+    "placeholders": {
+      "text": {
+        "content": "$1",
+        "example": "Hello World"
+      },
+      "index": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "act_typeText_ok": {
+    "message": "Successfully typed '$TEXT$' into element at index $INDEX$",
+    "placeholders": {
+      "text": {
+        "content": "$1",
+        "example": "Hello World"
+      },
+      "index": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "act_typeText_failed": {
+    "message": "Failed to type text: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Element not focusable"
+      }
+    }
   }
 }
