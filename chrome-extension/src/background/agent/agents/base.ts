@@ -8,6 +8,7 @@ import type { Action } from '../actions/builder';
 import { convertInputMessages, extractJsonFromModelOutput, removeThinkTags } from '../messages/utils';
 import { isAbortedError, ResponseParseError } from './errors';
 import { ProviderTypeEnum } from '@extension/storage';
+import { StructuredOutputEnforcer, type EnforcementConfig } from '../validation/structured-output-enforcer';
 
 const logger = createLogger('agent');
 
@@ -20,6 +21,7 @@ export interface BaseAgentOptions {
   context: AgentContext;
   prompt: BasePrompt;
   provider?: string;
+  outputEnforcement?: Partial<EnforcementConfig>;
 }
 export interface ExtraAgentOptions {
   id?: string;
@@ -46,6 +48,7 @@ export abstract class BaseAgent<T extends z.ZodType, M = unknown> {
   protected withStructuredOutput: boolean;
   protected callOptions?: CallOptions;
   protected modelOutputToolName: string;
+  protected outputEnforcer: StructuredOutputEnforcer;
   declare ModelOutput: z.infer<T>;
 
   constructor(modelOutputSchema: T, options: BaseAgentOptions, extraOptions?: Partial<ExtraAgentOptions>) {
@@ -55,6 +58,8 @@ export abstract class BaseAgent<T extends z.ZodType, M = unknown> {
     this.prompt = options.prompt;
     this.context = options.context;
     this.provider = options.provider || '';
+    // Initialize output enforcer with configuration
+    this.outputEnforcer = new StructuredOutputEnforcer(options.outputEnforcement);
     // TODO: fix this, the name is not correct in production environment
     this.chatModelLibrary = this.chatLLM.constructor.name;
     this.modelName = this.getModelName();
@@ -164,7 +169,7 @@ export abstract class BaseAgent<T extends z.ZodType, M = unknown> {
           response?.raw?.content &&
           typeof response.raw.content === 'string'
         ) {
-          const parsed = this.manuallyParseResponse(response.raw.content);
+          const parsed = await this.manuallyParseResponse(response.raw.content);
           if (parsed) {
             return parsed;
           }
@@ -185,7 +190,7 @@ export abstract class BaseAgent<T extends z.ZodType, M = unknown> {
       });
 
       if (typeof response.content === 'string') {
-        const parsed = this.manuallyParseResponse(response.content);
+        const parsed = await this.manuallyParseResponse(response.content);
         if (parsed) {
           return parsed;
         }
@@ -203,10 +208,32 @@ export abstract class BaseAgent<T extends z.ZodType, M = unknown> {
   abstract execute(): Promise<AgentOutput<M>>;
 
   // Helper method to validate metadata
-  protected validateModelOutput(data: unknown): this['ModelOutput'] | undefined {
+  protected async validateModelOutput(data: unknown): Promise<this['ModelOutput'] | undefined> {
     if (!this.modelOutputSchema || !data) return undefined;
     try {
-      return this.modelOutputSchema.parse(data);
+      // First use Zod schema validation
+      const parsed = this.modelOutputSchema.parse(data);
+
+      // Then apply structured output enforcement
+      const enforcementResult = await this.outputEnforcer.enforce(
+        parsed,
+        this.modelOutputSchema,
+        `${this.id} output`
+      );
+
+      if (enforcementResult.isValid && enforcementResult.data) {
+        return enforcementResult.data;
+      }
+
+      // Log enforcement issues
+      if (enforcementResult.errors.length > 0) {
+        logger.error(`Structured output enforcement failed for ${this.id}`, {
+          errors: enforcementResult.errors,
+        });
+      }
+
+      // Return parsed data even if enforcement has warnings (in non-strict mode)
+      return parsed;
     } catch (error) {
       logger.error('validateModelOutput', error);
       throw new ResponseParseError('Could not validate model output');
@@ -214,11 +241,11 @@ export abstract class BaseAgent<T extends z.ZodType, M = unknown> {
   }
 
   // Helper method to manually parse the response content
-  protected manuallyParseResponse(content: string): this['ModelOutput'] | undefined {
+  protected async manuallyParseResponse(content: string): Promise<this['ModelOutput'] | undefined> {
     const cleanedContent = removeThinkTags(content);
     try {
       const extractedJson = extractJsonFromModelOutput(cleanedContent);
-      return this.validateModelOutput(extractedJson);
+      return await this.validateModelOutput(extractedJson);
     } catch (error) {
       logger.warning('manuallyParseResponse failed', error);
       return undefined;

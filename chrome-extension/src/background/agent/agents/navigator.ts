@@ -30,7 +30,7 @@ import { AgentStepRecord } from '../history';
 import { type DOMHistoryElement } from '@src/background/browser/dom/history/view';
 import { ElementFingerprintService } from '@src/background/browser/dom/fingerprint';
 import { ElementLocatorService } from '@src/background/browser/dom/locator';
-import type { DOMElementNode } from '@src/background/browser/dom/views';
+import { adaptiveDelayService, type DelayContext } from '../adaptive-delay';
 
 const logger = createLogger('NavigatorAgent');
 
@@ -103,13 +103,13 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
 
     // The zod object is too complex to be used directly, so we need to convert it to json schema first for the model to use
     this.jsonSchema = convertZodToJsonSchema(this.modelOutputSchema, 'NavigatorAgentOutput', true);
-    
+
     // Initialize fingerprint service for element validation
     this.fingerprintService = new ElementFingerprintService();
-    
+
     // Initialize element locator service for multi-strategy element location
     this.elementLocatorService = new ElementLocatorService();
-    
+
   }
 
   async invoke(inputMessages: BaseMessage[]): Promise<this['ModelOutput']> {
@@ -388,6 +388,8 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
   private async doMultiAction(actions: Record<string, unknown>[]): Promise<ActionResult[]> {
     const results: ActionResult[] = [];
     let errCount = 0;
+    let lastActionTime = Date.now();
+    let consecutiveFastActions = 0;
     logger.info('Actions', actions);
 
     const browserContext = this.context.browserContext;
@@ -399,6 +401,24 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
     for (const [i, action] of actions.entries()) {
       const actionName = Object.keys(action)[0];
       const actionArgs = action[actionName];
+
+      // Calculate adaptive delay between actions
+      const delayContext: DelayContext = {
+        actionType: actionName,
+        previousActionTime: Date.now() - lastActionTime,
+        consecutiveFastActions,
+        pageHasAnimations: false, // Could be detected from browserState
+        pageIsLoading: false, // Could be detected from browserState
+        elementType: (actionArgs as any)?.element?.tagName,
+        isFormAction: ['input_text', 'select_dropdown_option'].includes(actionName),
+        isNavigationAction: actionName === 'open_url',
+      };
+
+      // Wait before executing the action (except for the first one)
+      if (i > 0) {
+        await adaptiveDelayService.wait(delayContext);
+      }
+
       try {
         // check if the task is paused or stopped
         if (this.context.paused || this.context.stopped) {
@@ -411,7 +431,7 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
         }
 
         const indexArg = actionInstance.getIndexArg(actionArgs);
-        
+
         if (i > 0 && indexArg !== null) {
           const newState = await browserContext.getState(this.context.options.useVision);
           const newPathHashes = await calcBranchPathHashSet(newState);
@@ -470,12 +490,22 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
         }
         results.push(result);
 
+        // Update timing tracking
+        const now = Date.now();
+        const actionDuration = now - lastActionTime;
+        lastActionTime = now;
+
+        // Track if this was a fast action
+        if (actionDuration < 500) {
+          consecutiveFastActions++;
+        } else {
+          consecutiveFastActions = 0;
+        }
+
         // check if the task is paused or stopped
         if (this.context.paused || this.context.stopped) {
           return results;
         }
-        // TODO: wait for 1 second for now, need to optimize this to avoid unnecessary waiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
         if (error instanceof URLNotAllowedError) {
           throw error;
@@ -521,11 +551,11 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
     };
 
     const element = browserState.selectorMap.get(elementIndex);
-    
+
     // Check if element exists in selector map
     if (!element) {
       validation.reason = `Element with index ${elementIndex} not found in selector map`;
-      
+
       // Try to find alternative using fingerprint matching
       const alternative = await this.findAlternativeElement(elementIndex, browserState);
       if (alternative !== null) {

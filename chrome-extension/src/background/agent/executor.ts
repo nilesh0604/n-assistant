@@ -11,6 +11,7 @@ import type BrowserContext from '../browser/context';
 import { ActionBuilder } from './actions/builder';
 import { EventManager } from './event/manager';
 import { Actors, type EventCallback, EventType, ExecutionState } from './event/types';
+import { adaptiveDelayService, type DelayContext } from './adaptive-delay';
 import {
   ChatModelAuthError,
   ChatModelBadRequestError,
@@ -71,7 +72,7 @@ export class Executor {
     this.generalSettings = extraArgs?.generalSettings;
     this.intentAnalyzer = extraArgs?.intentAnalyzer;
     this.tasks.push(task);
-    
+
     // Configure navigator prompt with hierarchical DOM options
     const navigatorPromptOptions = {
       maxActionsPerStep: context.options.maxActionsPerStep,
@@ -140,13 +141,13 @@ export class Executor {
    */
   async execute(): Promise<void> {
     logger.info(`🚀 Executing task: ${this.tasks[this.tasks.length - 1]}`);
-    
+
     // Guard against concurrent executions during clarification
     if (this.pendingClarification) {
       logger.warning('Execution blocked while clarification is pending');
       return;
     }
-    
+
     // reset the step counter
     const context = this.context;
     context.nSteps = 0;
@@ -405,7 +406,7 @@ export class Executor {
     sessionId: string,
     maxRetries = 3,
     skipFailures = true,
-    delayBetweenActions = 2.0,
+    delayBetweenActions = 2.0, // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<ActionResult[]> {
     const results: ActionResult[] = [];
     const replayLogger = createLogger('Executor:replayHistory');
@@ -435,12 +436,22 @@ export class Executor {
         }
 
         // Execute the history step with enhanced method that handles all the logic
+        const delayContext: DelayContext = {
+          actionType: 'replay',
+          previousActionTime: 0,
+          consecutiveFastActions: 0,
+          pageHasAnimations: false,
+          pageIsLoading: false,
+        };
+
+        const adaptiveDelay = await adaptiveDelayService.calculateDelay(delayContext);
+
         const stepResults = await this.navigator.executeHistoryStep(
           historyItem,
           i,
           history.history.length,
           maxRetries,
-          delayBetweenActions * 1000,
+          adaptiveDelay,
           skipFailures,
         );
 
@@ -499,14 +510,14 @@ export class Executor {
    */
   private async requestClarification(analysis: IntentAnalysis): Promise<void> {
     this.pendingClarification = true;
-    
-    const clarificationMessage = analysis.suggestedClarification || 
-      t('exec_intent_clarification_needed') + '\n\n' + 
+
+    const clarificationMessage = analysis.suggestedClarification ||
+      t('exec_intent_clarification_needed') + '\n\n' +
       'Ambiguities detected:\n' + analysis.ambiguities.join('\n');
 
     // Emit clarification needed event
     this.context.emitEvent(Actors.SYSTEM, ExecutionState.TASK_CLARIFICATION_NEEDED, clarificationMessage);
-    
+
     logger.info('🤔 Clarification requested for task ambiguities');
   }
 
@@ -520,36 +531,36 @@ export class Executor {
     }
 
     const originalTask = this.tasks[this.tasks.length - 1];
-    
+
     try {
       // Clarify the task using user input
       const clarifiedTask = await this.intentAnalyzer.clarifyTask(originalTask, userClarification);
-      
+
       // Replace the current task with clarified version
       this.tasks[this.tasks.length - 1] = clarifiedTask;
-      
+
       // Add clarified task as a new task in message manager
       this.context.messageManager.addNewTask(clarifiedTask);
-      
+
       // Reset clarification state
       this.pendingClarification = false;
-      
+
       // Emit clarification provided event
       this.context.emitEvent(Actors.SYSTEM, ExecutionState.TASK_CLARIFICATION_PROVIDED, clarifiedTask);
-      
+
       logger.info(`✅ Task clarified: "${clarifiedTask}"`);
-      
+
       // Resume execution with clarified task
       // Use a separate method to avoid recursive calls
       void this.resumeExecutionAfterClarification();
-      
+
     } catch (error) {
       logger.error('Failed to clarify task', error);
-      
+
       // Emit failure event and continue with original task
       this.context.emitEvent(Actors.SYSTEM, ExecutionState.TASK_FAIL, 'Failed to clarify task, proceeding with original');
       this.pendingClarification = false;
-      
+
       // Continue with original task
       void this.resumeExecutionAfterClarification();
     }
@@ -561,7 +572,7 @@ export class Executor {
   private async resumeExecutionAfterClarification(): Promise<void> {
     // Small delay to ensure event processing completes
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     // Reset execution state and continue
     this.context.nSteps = 0;
     await this.execute();
@@ -585,21 +596,21 @@ export class Executor {
 
     // Replace the current task with clarified version
     this.tasks[this.tasks.length - 1] = clarifiedTask;
-    
+
     // Set flag to skip ambiguity check for clarified tasks
     this.skipAmbiguityCheck = true;
-    
+
     // Add clarified task as a new task in message manager
     this.context.messageManager.addNewTask(clarifiedTask);
-    
+
     // Reset clarification state
     this.pendingClarification = false;
-    
+
     // Emit clarification provided event
     this.context.emitEvent(Actors.SYSTEM, ExecutionState.TASK_CLARIFICATION_PROVIDED, clarifiedTask);
-    
+
     logger.info(`✅ Task clarified via messaging: "${clarifiedTask}"`);
-    
+
     // Resume execution with clarified task
     void this.resumeExecutionAfterClarification();
   }
@@ -615,12 +626,12 @@ export class Executor {
 
     // Reset clarification state and continue with original task
     this.pendingClarification = false;
-    
+
     // Emit clarification cancelled event
     this.context.emitEvent(Actors.SYSTEM, ExecutionState.TASK_CLARIFICATION_CANCELLED, 'Continuing with original task');
-    
+
     logger.info('📋 Clarification cancelled, resuming with original task');
-    
+
     // Resume execution with original task
     void this.resumeExecutionAfterClarification();
   }

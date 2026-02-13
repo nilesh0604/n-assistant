@@ -3,6 +3,7 @@ import type { Action } from '../actions/builder';
 import type { AgentContext } from '../types';
 import { DOMElementNode, DOMState } from '../../browser/dom/views';
 import { ElementFingerprintService } from '../../browser/dom/fingerprint';
+import { ElementStabilityChecker } from './element-stability-checker';
 import { t } from '@extension/i18n';
 
 const logger = createLogger('ActionValidator');
@@ -16,6 +17,11 @@ export interface ActionValidation {
   elementVisible: boolean;
   elementEnabled: boolean;
   elementStable: boolean;
+  stabilityResult?: {
+    isStable: boolean;
+    reason: string;
+    recommendations: string[];
+  };
   alternativeIndex?: number;
   errors: string[];
   warnings: string[];
@@ -40,9 +46,11 @@ export interface ElementFingerprint {
  */
 export class ActionValidator {
   private fingerprintService: ElementFingerprintService;
+  private stabilityChecker: ElementStabilityChecker;
 
   constructor(private context: AgentContext) {
     this.fingerprintService = new ElementFingerprintService();
+    this.stabilityChecker = new ElementStabilityChecker();
   }
 
   /**
@@ -65,7 +73,7 @@ export class ActionValidator {
     try {
       // Get the target element
       const element = this.getTargetElement(action, state);
-      
+
       if (!element) {
         validation.errors.push('Element not found');
         return validation;
@@ -78,7 +86,17 @@ export class ActionValidator {
       validation.elementEnabled = this.isElementEnabled(element);
 
       // Check element stability (not animating/loading)
-      validation.elementStable = await this.checkElementStability(element);
+      const stabilityResult = await this.stabilityChecker.checkStability(element);
+      validation.elementStable = stabilityResult.isStable;
+      validation.stabilityResult = {
+        isStable: stabilityResult.isStable,
+        reason: stabilityResult.reason,
+        recommendations: stabilityResult.recommendations,
+      };
+
+      if (!stabilityResult.isStable) {
+        validation.warnings.push(`Element may not be stable: ${stabilityResult.reason}`);
+      }
 
       // Validate action-specific requirements
       const actionValidation = this.validateActionSpecificRequirements(action, element);
@@ -86,10 +104,10 @@ export class ActionValidator {
       validation.warnings.push(...actionValidation.warnings);
 
       // Determine if action can be executed
-      validation.canExecute = 
-        validation.elementExists && 
-        validation.elementVisible && 
-        validation.elementEnabled && 
+      validation.canExecute =
+        validation.elementExists &&
+        validation.elementVisible &&
+        validation.elementEnabled &&
         validation.elementStable &&
         validation.errors.length === 0;
 
@@ -132,7 +150,7 @@ export class ActionValidator {
     state: DOMState
   ): DOMElementNode | null {
     const index = action.index as number;
-    
+
     if (typeof index !== 'number' || index < 0) {
       return null;
     }
@@ -186,38 +204,6 @@ export class ActionValidator {
   }
 
   /**
-   * Check if element is stable (not animating or loading)
-   */
-  private async checkElementStability(element: DOMElementNode): Promise<boolean> {
-    // Check for loading indicators in element or nearby text
-    const loadingIndicators = ['loading...', 'please wait', 'processing', 'spinner'];
-    
-    const elementText = (element.getAllTextTillNextClickableElement() || '').toLowerCase();
-    const hasLoadingIndicator = loadingIndicators.some(indicator => 
-      elementText.includes(indicator)
-    );
-
-    if (hasLoadingIndicator) {
-      return false;
-    }
-
-    // Check for animation classes
-    const animationClasses = ['animate', 'spin', 'pulse', 'loading'];
-    const elementClass = (element.attributes.class || '').toLowerCase();
-    const hasAnimationClass = animationClasses.some(cls => 
-      elementClass.includes(cls)
-    );
-
-    if (hasAnimationClass) {
-      return false;
-    }
-
-    // For now, assume element is stable if no loading indicators found
-    // In the future, this could be enhanced with actual DOM stability detection
-    return true;
-  }
-
-  /**
    * Validate action-specific requirements
    */
   private validateActionSpecificRequirements(
@@ -232,19 +218,19 @@ export class ActionValidator {
       case 'click_element':
         this.validateClickAction(action, element, result);
         break;
-      
+
       case 'input_text':
         this.validateInputAction(action, element, result);
         break;
-      
+
       case 'select_dropdown_option':
         this.validateSelectAction(action, element, result);
         break;
-      
+
       case 'scroll_to_text':
         this.validateScrollAction(action, result);
         break;
-      
+
       default:
         // Unknown action type - add warning but don't block execution
         result.warnings.push(`Unknown action type: ${actionType}`);
@@ -264,10 +250,10 @@ export class ActionValidator {
     // Check if element is clickable
     const clickableTags = ['button', 'a', 'input', 'select', 'textarea', 'option'];
     const isClickableTag = clickableTags.includes(element.tagName?.toLowerCase() || '');
-    
+
     const hasClickRole = element.attributes.role === 'button' || element.attributes.role === 'link';
     const hasClickHandler = element.attributes.onclick !== undefined;
-    
+
     if (!isClickableTag && !hasClickRole && !hasClickHandler) {
       result.warnings.push('Element may not be clickable');
     }
@@ -276,7 +262,7 @@ export class ActionValidator {
     const destructiveTexts = ['delete', 'remove', 'cancel', 'exit', 'close'];
     const elementText = (element.getAllTextTillNextClickableElement() || '').toLowerCase();
     const isDestructive = destructiveTexts.some(text => elementText.includes(text));
-    
+
     if (isDestructive) {
       result.warnings.push('Action may be destructive');
     }
@@ -292,7 +278,7 @@ export class ActionValidator {
   ): void {
     const inputTags = ['input', 'textarea'];
     const isInputTag = inputTags.includes(element.tagName?.toLowerCase() || '');
-    
+
     if (!isInputTag) {
       result.errors.push('Element is not an input field');
       return;
@@ -301,7 +287,7 @@ export class ActionValidator {
     // Check if input type is compatible with text input
     const inputType = element.attributes.type || 'text';
     const incompatibleTypes = ['file', 'checkbox', 'radio', 'submit', 'button', 'image'];
-    
+
     if (incompatibleTypes.includes(inputType.toLowerCase())) {
       result.errors.push(`Cannot input text into input type: ${inputType}`);
     }
@@ -309,7 +295,7 @@ export class ActionValidator {
     // Check for maxlength constraint
     const text = action.text as string;
     const maxlength = element.attributes.maxlength;
-    
+
     if (text && maxlength && text.length > parseInt(maxlength)) {
       result.warnings.push('Input text exceeds maxlength attribute');
     }
@@ -325,7 +311,7 @@ export class ActionValidator {
   ): void {
     const selectTags = ['select'];
     const isSelectTag = selectTags.includes(element.tagName?.toLowerCase() || '');
-    
+
     if (!isSelectTag) {
       result.errors.push('Element is not a select dropdown');
       return;
@@ -360,14 +346,14 @@ export class ActionValidator {
   ): Promise<number | null> {
     const index = action.index as number;
     const originalElement = this.findElementByIndex(state, index);
-    
+
     if (!originalElement || !originalElement.fingerprint) {
       return null;
     }
 
     // Get all interactive elements as candidates
     const candidates = this.getAllInteractiveElements(state);
-    
+
     // Find best match using fingerprint similarity
     const bestMatch = this.fingerprintService.findBestMatch(
       originalElement.fingerprint,
@@ -383,12 +369,12 @@ export class ActionValidator {
    */
   private getAllInteractiveElements(state: DOMState): DOMElementNode[] {
     const interactiveElements: DOMElementNode[] = [];
-    
+
     const collectInteractiveElements = (node: any): void => {
       if (node instanceof DOMElementNode && node.isInteractive && node.highlightIndex !== null) {
         interactiveElements.push(node);
       }
-      
+
       if (node.children) {
         for (const child of node.children) {
           collectInteractiveElements(child);
