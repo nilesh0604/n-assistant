@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Filter, ChevronDown, ChevronRight, Info } from 'lucide-react';
-import { cn } from '@extension/ui/lib/utils';
+import React, { useState } from 'react';
+import { FaEye, FaFilter, FaChevronDown, FaChevronRight, FaInfo } from 'react-icons/fa';
+
+// Simple className utility function
+const cn = (...classes: (string | undefined | null | false)[]): string => {
+  return classes.filter(Boolean).join(' ');
+};
 
 export interface ElementInfo {
   index: number;
@@ -66,7 +70,7 @@ export function ProgressiveElementDisclosure({
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-500" />
+            <FaEye className="w-4 h-4 text-gray-500" />
             <h3 className="font-medium text-gray-900">Element Filtering</h3>
           </div>
           <button
@@ -120,7 +124,11 @@ export function ProgressiveElementDisclosure({
                 }}
                 className="ml-1 hover:opacity-70"
               >
-                {hiddenCategories[category] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                {!hiddenCategories[category] ? (
+                  <FaChevronDown className="w-4 h-4" />
+                ) : (
+                  <FaChevronRight className="w-4 h-4" />
+                )}
               </button>
             </button>
           ))}
@@ -131,7 +139,7 @@ export function ProgressiveElementDisclosure({
       <div className="max-h-96 overflow-y-auto">
         {filteredElements.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
-            <Filter className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <FaFilter className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p>No elements match the current filters</p>
           </div>
         ) : (
@@ -192,7 +200,7 @@ export function ProgressiveElementDisclosure({
                           {element.reasons.length > 0 && (
                             <div className="space-y-1">
                               <div className="flex items-center gap-1">
-                                <Info className="h-3 w-3 text-gray-400" />
+                                <FaInfo className="w-4 h-4 text-gray-500" />
                                 <span className="text-xs text-gray-500">Why relevant:</span>
                               </div>
                               <ul className="text-xs text-gray-600 space-y-0.5 ml-4">
@@ -229,3 +237,5 @@ export function ProgressiveElementDisclosure({
     </div>
   );
 }
+
+export const ProgressiveElementDisclosureUI = ProgressiveElementDisclosure;

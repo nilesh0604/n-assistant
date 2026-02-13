@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { AlertCircle, CheckCircle, Loader2, Info, AlertTriangle } from 'lucide-react';
-import { cn } from '@extension/ui/lib/utils';
+import React, { useState } from 'react';
+import { FaExclamationCircle, FaCheckCircle, FaSpinner, FaInfo, FaExclamationTriangle } from 'react-icons/fa';
+
+// Simple className utility function
+const cn = (...classes: (string | undefined | null | false)[]): string => {
+  return classes.filter(Boolean).join(' ');
+};
 
 export interface ValidationStatus {
   isValid: boolean;
@@ -26,7 +30,7 @@ export function PreActionValidation({ validation, isChecking, className }: PreAc
   if (isChecking) {
     return (
       <div className={cn('flex items-center gap-2 p-3 bg-blue-50 rounded-lg', className)}>
-        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+        <FaSpinner className="w-5 h-5 text-blue-500 animate-spin" />
         <span className="text-sm text-blue-700">Validating action...</span>
       </div>
     );
@@ -38,24 +42,24 @@ export function PreActionValidation({ validation, isChecking, className }: PreAc
 
   const getStatusIcon = () => {
     if (!validation.elementExists) {
-      return <AlertCircle className="h-4 w-4 text-red-500" />;
+      return <FaExclamationCircle className="h-4 w-4 text-red-500" />;
     }
     if (!validation.elementVisible) {
-      return <AlertCircle className="h-4 w-4 text-orange-500" />;
+      return <FaExclamationCircle className="h-4 w-4 text-orange-500" />;
     }
     if (!validation.elementEnabled) {
-      return <AlertCircle className="h-4 w-4 text-orange-500" />;
+      return <FaExclamationCircle className="h-4 w-4 text-orange-500" />;
     }
     if (!validation.isStable) {
-      return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      return <FaExclamationTriangle className="w-4 h-4 text-yellow-500" />;
     }
     if (validation.errors.length > 0) {
-      return <AlertCircle className="h-4 w-4 text-red-500" />;
+      return <FaExclamationCircle className="h-4 w-4 text-red-500" />;
     }
     if (validation.warnings.length > 0) {
-      return <Info className="h-4 w-4 text-yellow-500" />;
+      return <FaInfo className="w-4 h-4 text-gray-500" />;
     }
-    return <CheckCircle className="h-4 w-4 text-green-500" />;
+    return <FaCheckCircle className="w-5 h-5 text-green-500" />;
   };
 
   const getStatusColor = () => {
